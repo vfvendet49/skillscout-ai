@@ -1,0 +1,50 @@
+<svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Define gradient for depth -->
+  <defs>
+    <linearGradient id="greenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2d6a4f;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a4d2e;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Left binocular barrel (outer cylinder) -->
+  <ellipse cx="120" cy="80" rx="35" ry="50" fill="url(#greenGrad)" stroke="#0d2417" stroke-width="2"/>
+  
+  <!-- Left binocular lens (front circle) -->
+  <circle cx="120" cy="80" r="28" fill="#1a4d2e" stroke="#0d2417" stroke-width="2"/>
+  
+  <!-- Left binocular lens ring (white outline) -->
+  <circle cx="120" cy="80" r="25" fill="none" stroke="white" stroke-width="4"/>
+  
+  <!-- Left binocular inner lens -->
+  <circle cx="120" cy="80" r="18" fill="#e8f5e9" stroke="none"/>
+  
+  <!-- Right binocular barrel (outer cylinder) -->
+  <ellipse cx="280" cy="80" rx="35" ry="50" fill="url(#greenGrad)" stroke="#0d2417" stroke-width="2"/>
+  
+  <!-- Right binocular lens (front circle) -->
+  <circle cx="280" cy="80" r="28" fill="#1a4d2e" stroke="#0d2417" stroke-width="2"/>
+  
+  <!-- Right binocular lens ring (white outline) -->
+  <circle cx="280" cy="80" r="25" fill="none" stroke="white" stroke-width="4"/>
+  
+  <!-- Right binocular inner lens -->
+  <circle cx="280" cy="80" r="18" fill="#e8f5e9" stroke="none"/>
+  
+  <!-- Bridge connecting binoculars (top) -->
+  <rect x="140" y="45" width="120" height="15" rx="7" fill="url(#greenGrad)" stroke="#0d2417" stroke-width="2"/>
+  
+  <!-- Bridge connecting binoculars (middle) -->
+  <ellipse cx="200" cy="70" rx="50" ry="12" fill="#2d6a4f" stroke="#0d2417" stroke-width="2"/>
+  
+  <!-- Center detail dot -->
+  <circle cx="200" cy="70" r="6" fill="white" stroke="none"/>
+  
+  <!-- Binocular eyepieces (top caps) -->
+  <rect x="110" y="20" width="20" height="25" rx="4" fill="#2d6a4f" stroke="#0d2417" stroke-width="1.5"/>
+  <rect x="270" y="20" width="20" height="25" rx="4" fill="#2d6a4f" stroke="#0d2417" stroke-width="1.5"/>
+  
+  <!-- Eyepiece highlights -->
+  <rect x="112" y="22" width="16" height="8" rx="2" fill="#3d7a5f" stroke="none"/>
+  <rect x="272" y="22" width="16" height="8" rx="2" fill="#3d7a5f" stroke="none"/>
+</svg>

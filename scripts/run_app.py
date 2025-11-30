@@ -23,13 +23,14 @@ def get_project_root() -> Path:
 def run_dev(port: int = 8501, host: str = "localhost") -> None:
     """Run Streamlit app in development mode with hot reload."""
     project_root = get_project_root()
-    app_path = project_root / "src" / "jobfinder_app" / "app.py"
+    # Use Home.py as entry point for multi-page app
+    app_path = project_root / "src" / "jobfinder_app" / "Home.py"
     
     if not app_path.exists():
-        print(f"Error: app.py not found at {app_path}")
+        print(f"Error: Home.py not found at {app_path}")
         sys.exit(1)
     
-    print(f"Starting JobFinder AI in DEV mode on http://{host}:{port}")
+    print(f"Starting SkillScout AI in DEV mode on http://{host}:{port}")
     print(f"App path: {app_path}")
     print(f"Press Ctrl+C to stop.\n")
     
@@ -56,13 +57,14 @@ def run_dev(port: int = 8501, host: str = "localhost") -> None:
 def run_prod(port: int = 8501, host: str = "0.0.0.0") -> None:
     """Run Streamlit app in production mode."""
     project_root = get_project_root()
-    app_path = project_root / "src" / "jobfinder_app" / "app.py"
+    # Use Home.py as entry point for multi-page app
+    app_path = project_root / "src" / "jobfinder_app" / "Home.py"
     
     if not app_path.exists():
-        print(f"Error: app.py not found at {app_path}")
+        print(f"Error: Home.py not found at {app_path}")
         sys.exit(1)
     
-    print(f"Starting JobFinder AI in PRODUCTION mode on {host}:{port}")
+    print(f"Starting SkillScout AI in PRODUCTION mode on {host}:{port}")
     print(f"App path: {app_path}")
     print(f"Press Ctrl+C to stop.\n")
     
