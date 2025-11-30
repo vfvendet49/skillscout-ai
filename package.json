@@ -1,0 +1,19 @@
+{
+  "name": "jieunkim",
+  "version": "1.0.0",
+  "description": "JobFinder AI app and tests",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:playwright": "playwright test",
+    "test:playwright:ui": "playwright test --ui",
+    "test:playwright:debug": "playwright test --debug"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.57.0"
+  }
+}
