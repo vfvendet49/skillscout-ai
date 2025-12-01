@@ -9,7 +9,7 @@ on:
 
 jobs:
   e2e:
-    runs-on: ubuntu-latest
+    runs_on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - name: Checkout
