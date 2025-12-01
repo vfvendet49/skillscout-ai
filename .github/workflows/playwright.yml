@@ -82,10 +82,18 @@ jobs:
           echo "--- ls (top) ---"
           ls -la || true
           echo "\n--- streamlit.log (tail 200) ---"
-          if [ -f streamlit.log ]; then tail -n 200 streamlit.log; else echo "(streamlit.log missing)"; fi
+          if [ -f streamlit.log ]; then
+            tail -n 200 streamlit.log || true
+          else
+            echo "(streamlit.log missing)"
+          fi
           echo "\n--- playwright-report directory listing ---"
-          if [ -d playwright-report ]; then ls -la playwright-report || true; find playwright-report -maxdepth 2 -type f -print || true; else echo "(playwright-report missing)"; fi
-
+          if [ -d playwright-report ]; then
+            ls -la playwright-report || true
+            find playwright-report -maxdepth 2 -type f -print || true
+          else
+            echo "(playwright-report missing)"
+          fi
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
