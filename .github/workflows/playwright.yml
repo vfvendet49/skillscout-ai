@@ -49,6 +49,7 @@ jobs:
       - name: Start Streamlit app in background
         env:
           API_BASE: ${{ secrets.API_BASE }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           # start app in background and redirect logs to file
           /usr/bin/env python3 scripts/run_app.py dev > streamlit.log 2>&1 & echo $! > streamlit.pid
@@ -69,6 +70,7 @@ jobs:
       - name: Run Playwright tests (headless, increased heap)
         env:
           NODE_OPTIONS: --max-old-space-size=4096
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           npx playwright test --reporter=list --output=playwright-report
 

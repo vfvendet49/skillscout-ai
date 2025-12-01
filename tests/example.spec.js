@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * JobFinder AI E2E Tests with SkillScout Integration
+ * SkillScout AI E2E Tests
  * 
  * These tests validate:
  * - Page structure and navigation
@@ -22,10 +22,10 @@ const BASE_URL = 'http://localhost:8501';
 // SMOKE TESTS — Basic page structure
 // ============================================================================
 
-test('page loads and displays JobFinder AI title', async ({ page }) => {
+test('page loads and displays SkillScout AI title', async ({ page }) => {
   await page.goto(BASE_URL);
-  await expect(page).toHaveTitle(/JobFinder AI/);
-  await expect(page.locator('h1')).toContainText('JobFinder AI');
+  await expect(page).toHaveTitle(/SkillScout AI/);
+  await expect(page.locator('h1')).toContainText('SkillScout AI');
 });
 
 test('all tabs are present', async ({ page }) => {

@@ -1,4 +1,4 @@
-# streamlit_app.py — JobFinder AI main Streamlit application
+# streamlit_app.py — SkillScout AI main Streamlit application
 import streamlit as st
 import requests, json
 from pathlib import Path
@@ -15,9 +15,9 @@ if not API:
 if not API:
     API = "http://localhost:8000"
 
-st.set_page_config(page_title="JobFinder AI", layout="wide")
+st.set_page_config(page_title="SkillScout AI", layout="wide")
 
-st.title("JobFinder AI")
+st.title("SkillScout AI")
 
 tab1, tab2, tab3, tab4 = st.tabs(["Profile & Prefs", "Uploads", "Results", "Job Detail"])
 
