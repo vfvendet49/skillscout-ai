@@ -1,2 +1,16 @@
 node_modules
 .nvm/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.DS_Store
+.vscode/
+.env
+.env.*
+*.log
+playwright-report/
+test-results/
+node_modules/
+package-lock.json
+.streamlit/
