@@ -120,7 +120,13 @@ jobs:
             kill $(cat streamlit.pid) || true
             rm -f streamlit.pid
           fi
+          
           if [ -f mock.pid ]; then
             kill $(cat mock.pid) || true
             rm -f mock.pid
           fi
+      - name: Ensure report directory exists
+        run: mkdir -p playwright-report
+        
+      - name: Generate Playwright HTML report
+        run: npx playwright shiow-report
