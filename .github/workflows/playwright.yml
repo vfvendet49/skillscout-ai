@@ -76,7 +76,7 @@ jobs:
           curl --silent http://localhost:8501 || (echo "Streamlit did not start" && tail -n 200 streamlit.log && exit 1)
 
       - name: Run Playwright tests (headless, increased heap, MOCK OpenAI)
-        env:
+      env:
           NODE_OPTIONS: --max-old-space-size=4096
           OPENAI_API_KEY: MOCK
           API_BASE: http://localhost:8000
