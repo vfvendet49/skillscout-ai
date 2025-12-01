@@ -47,10 +47,17 @@ jobs:
         run: |
           npx playwright install --with-deps
 
+      - name: Start mock backend (local)
+        run: |
+          echo "Starting mock match server on http://localhost:8000"
+          python3 dev_mock_match_server.py > mock.log 2>&1 & echo $! > mock.pid
+
       - name: Start Streamlit app in background
         env:
-          API_BASE: ${{ secrets.API_BASE }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # point the app to the locally started mock backend
+          API_BASE: http://localhost:8000
+          # use MOCK key so the app uses canned responses for ChatGPT generation
+          OPENAI_API_KEY: MOCK
         run: |
           # start app in background and redirect logs to file
           /usr/bin/env python3 scripts/run_app.py dev > streamlit.log 2>&1 & echo $! > streamlit.pid
@@ -68,10 +75,11 @@ jobs:
           done
           curl --silent http://localhost:8501 || (echo "Streamlit did not start" && tail -n 200 streamlit.log && exit 1)
 
-      - name: Run Playwright tests (headless, increased heap)
+      - name: Run Playwright tests (headless, increased heap, MOCK OpenAI)
         env:
           NODE_OPTIONS: --max-old-space-size=4096
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_KEY: MOCK
+          API_BASE: http://localhost:8000
         run: |
           npx playwright test --reporter=list --output=playwright-report
 
@@ -111,4 +119,8 @@ jobs:
           if [ -f streamlit.pid ]; then
             kill $(cat streamlit.pid) || true
             rm -f streamlit.pid
+          fi
+          if [ -f mock.pid ]; then
+            kill $(cat mock.pid) || true
+            rm -f mock.pid
           fi
