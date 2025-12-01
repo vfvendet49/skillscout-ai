@@ -7,6 +7,21 @@ st.set_page_config(page_title="Results - SkillScout", layout="wide")
 
 st.title("Search Jobs")
 
+# Add custom CSS for background
+st.markdown(
+    """
+    <style>
+    body {
+        background-color: #f7f3ef;
+        background-image:
+            repeating-linear-gradient(0deg, #ede7df 0px, #ede7df 2px, transparent 2px, transparent 40px),
+            repeating-linear-gradient(90deg, #ede7df 0px, #ede7df 2px, transparent 2px, transparent 40px);
+        background-size: 40px 40px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 # Resolve API base URL
 API = os.getenv("API_BASE")
 if not API:

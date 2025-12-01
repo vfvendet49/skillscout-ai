@@ -10,6 +10,22 @@ st.set_page_config(page_title="Job Detail - SkillScout", layout="wide")
 
 st.title("Job Detail & AI Tweaks")
 
+# Add custom CSS for background
+st.markdown(
+    """
+    <style>
+    body {
+        background-color: #f7f3ef;
+        background-image:
+            repeating-linear-gradient(0deg, #ede7df 0px, #ede7df 2px, transparent 2px, transparent 40px),
+            repeating-linear-gradient(90deg, #ede7df 0px, #ede7df 2px, transparent 2px, transparent 40px);
+        background-size: 40px 40px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # Resolve API base URL
 API = os.getenv("API_BASE")
 if not API:
@@ -73,6 +89,9 @@ if sel:
                             key = None
                     if not key:
                         return None
+                    # Support a local MOCK mode via OPENAI_API_KEY=MOCK for offline testing
+                    if key == "MOCK":
+                        return "MOCK"
                     try:
                         return OpenAI(api_key=key)
                     except Exception:
@@ -81,6 +100,16 @@ if sel:
                 def generate_tweaks_via_openai(client, resume, cover, job_desc, matched_keywords):
                     if client is None:
                         return {"error": "No OpenAI API key configured (OPENAI_API_KEY)."}
+
+                    # If client == 'MOCK', return canned suggestions for smoke tests
+                    if client == "MOCK":
+                        return {
+                            "tweaks": [
+                                {"type": "add", "message": "Add a bullet about automating ETL pipelines using Airflow.", "keywords": ["Airflow", "ETL", "automation"]},
+                                {"type": "emphasize", "message": "Emphasize your experience with AWS S3 and data lakes.", "keywords": ["AWS S3", "data lake"]},
+                                {"type": "remove", "message": "Remove personal projects not related to data engineering.", "keywords": []}
+                            ]
+                        }
 
                     system_prompt = (
                         "You are an expert career coach and resume writer. Given a job description, a list of matched keywords that appeared in the job posting, "
