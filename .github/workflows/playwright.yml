@@ -2,9 +2,9 @@ name: Playwright UI Tests
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ '*' ]
+    branches: ['*']
   workflow_dispatch:
 
 jobs:
