@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: skillscout-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 8000
+    envVars:
+      - key: DATABASE_URL
+        scope: run
+        value: postgresql://user:isom599db@isom599aws.c18k2ewikpxy.us-east-2.rds.amazonaws.com:5432/jobfinder
