@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+.env.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+dev_mock_match_server.log
+
+# OS
+.DS_Store
+Thumbs.db
+*.tmp
+.*.tmp
+.849C9593-D756-4E56-8D6E-42412F2A707B
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Test results
+test-results/
+.pytest_cache/
+
+# User data (if sensitive)
+user_input_ben.json
+
