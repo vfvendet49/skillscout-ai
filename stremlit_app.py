@@ -1,240 +1,281 @@
 # streamlit_app.py
 import streamlit as st
 import requests, json
-from pathlib import Path
 import os
+from pathlib import Path
 
-# Resolve API base URL from (in order): environment variable, Streamlit secrets, then default
+# ==============================================
+# API BASE URL DETECTION
+# ==============================================
 API = os.getenv("API_BASE")
+
 if not API:
     try:
-        # Access Streamlit secrets safely — if secrets are not set, this can raise.
         API = st.secrets.get("API_BASE")
-    except Exception:
+    except:
         API = None
+
+# Default for deployed version
 if not API:
-    # Default to deployed API on Render
     API = "https://skillscout-ai-1.onrender.com"
 
-st.set_page_config(page_title="SkillScout AI", layout="wide")
 
+# ==============================================
+# PAGE CONFIG
+# ==============================================
+st.set_page_config(page_title="SkillScout AI", layout="wide")
 st.title("SkillScout AI")
 
-# Display API connection status
+
+# ==============================================
+# API HEALTH CHECK
+# ==============================================
 with st.sidebar:
-    st.subheader("🔗 API Connection")
-    st.write(f"**Backend:** {API}")
+    st.subheader("API Connection")
+    st.write(f"Backend: {API}")
+
     try:
-        import requests
-        health_check = requests.get(f"{API}/health", timeout=3)
-        if health_check.status_code == 200:
-            st.success("✅ Connected")
+        health = requests.get(f"{API}/health", timeout=3)
+        if health.status_code == 200:
+            st.success("Connected")
         else:
-            st.warning("⚠️ Backend responding with errors")
+            st.warning("Backend reachable but returned an error")
     except:
-        st.error("❌ Cannot reach backend")
+        st.error("Cannot reach backend")
 
-tab1, tab2, tab3, tab4 = st.tabs(["Profile & Prefs", "Uploads", "Results", "Job Detail"])
 
+# ==============================================
+# TABS
+# ==============================================
+tab1, tab2, tab3, tab4 = st.tabs([
+    "Profile & Prefs",
+    "Uploads",
+    "Results",
+    "Job Detail"
+])
+
+
+# ==========================================================
+# TAB 1 — PROFILE
+# ==========================================================
 with tab1:
     st.subheader("User Profile")
-    name = st.text_input("Name")
-    skills = st.text_area("Skills (comma-separated)").split(",")
-    industries = st.text_input("Industries (comma-separated)").split(",")
-    exp_level = st.selectbox("Experience level", ["entry", "junior", "mid-senior", "director", "executive"])
-    target_titles = st.text_input("Target titles (comma-separated)").split(",")
 
+    name = st.text_input("Name")
+
+    skills_raw = st.text_area("Skills (comma-separated)")
+    skills = [s.strip() for s in skills_raw.split(",") if s.strip()]
+
+    industries_raw = st.text_input("Industries (comma-separated)")
+    industries = [i.strip() for i in industries_raw.split(",") if i.strip()]
+
+    exp_level = st.selectbox("Experience level", 
+                             ["entry", "junior", "mid-senior", "director", "executive"])
+
+    titles_raw = st.text_input("Target titles (comma-separated)")
+    target_titles = [t.strip() for t in titles_raw.split(",") if t.strip()]
+
+
+    # Preferences Section
     st.subheader("Preferences")
     c1, c2, c3 = st.columns(3)
+
     with c1:
         city = st.text_input("City", value="Atlanta")
         state = st.text_input("State", value="GA")
         country = st.text_input("Country", value="US")
+
     with c2:
         remote = st.toggle("Remote OK", value=False)
         radius = st.number_input("Radius (miles)", 0, 200, 50)
-    with c3:
-        min_sal = st.number_input("Salary min", 0, 1000000, 80000)
-        max_sal = st.number_input("Salary max", 0, 1000000, 150000)
 
-    emp_types = st.multiselect("Employment type", ["full-time","part-time","contract"], default=["full-time"])
-    exclude_kw = st.text_input("Exclude keywords (comma-separated)", value="warehouse, entry-level").split(",")
-    pref_companies = st.text_input("Preferred companies (comma-separated)", value="Amazon, DHL, Coca-Cola").split(",")
-    avoid_companies = st.text_input("Avoid companies (comma-separated)", value="Uber").split(",")
+    with c3:
+        min_sal = st.number_input("Minimum Salary", 0, 500000, 80000)
+        max_sal = st.number_input("Maximum Salary", 0, 500000, 150000)
+
+    emp_types = st.multiselect(
+        "Employment Type",
+        ["full-time", "part-time", "contract"],
+        default=["full-time"]
+    )
+
+    exclude_raw = st.text_input("Exclude keywords (comma-separated)", value="warehouse, entry-level")
+    exclude_kw = [k.strip() for k in exclude_raw.split(",") if k.strip()]
+
+    pref_companies_raw = st.text_input("Preferred companies", value="Amazon, DHL, Coca-Cola")
+    pref_companies = [c.strip() for c in pref_companies_raw.split(",") if c.strip()]
+
+    avoid_raw = st.text_input("Avoid companies", value="Uber")
+    avoid_companies = [c.strip() for c in avoid_raw.split(",") if c.strip()]
+
     max_age = st.slider("Job age limit (days)", 1, 90, 45)
 
-    if st.button("Save Profile"):
-        try:
-            payload = {
-                "profile": {
-                    "name": name,
-                    "skills": [s.strip() for s in skills if s.strip()],
-                    "industries": [i.strip() for i in industries if i.strip()],
-                    "experience_level": exp_level,
-                    "target_titles": [t.strip() for t in target_titles if t.strip()],
-                },
-                "preferences": {
-                    "location": {"city": city, "state": state, "country": country, "remote": remote, "radius_miles": radius},
-                    "salary": {"min": int(min_sal), "max": int(max_sal)},
-                    "employment_type": emp_types,
-                    "exclude_keywords": [k.strip() for k in exclude_kw if k.strip()],
-                    "company_preferences": {"preferred": [c.strip() for c in pref_companies if c.strip()],
-                                            "avoid": [c.strip() for c in avoid_companies if c.strip()]},
-                    "job_age_limit_days": int(max_age)
-                }
-            }
-            url = f"{API}/profile"
-            r = requests.post(url, json=payload, timeout=5)
-            if r.status_code == 200:
-                st.success("✅ Profile saved successfully!")
-            elif r.status_code == 404:
-                error_msg = "Endpoint not found"
-                try:
-                    error_data = r.json()
-                    error_msg = error_data.get("detail", error_msg)
-                except:
-                    pass
-                st.error(f"❌ {error_msg}")
-                st.warning(f"💡 Make sure the FastAPI backend is running at {API}")
-                st.code("uvicorn app.main:app --reload", language="bash")
-            else:
-                try:
-                    error_data = r.json()
-                    error_msg = error_data.get("detail", error_data.get("error", str(error_data)))
-                except:
-                    error_msg = str(r.text) if r.text else f"Error {r.status_code}"
-                st.error(f"❌ Error {r.status_code}: {error_msg}")
-        except requests.exceptions.ConnectionError:
-            st.error(f"❌ Cannot connect to backend at {API}")
-            st.info("💡 Make sure the FastAPI backend is running:\n```bash\nuvicorn app.main:app --reload\n```")
-        except requests.exceptions.Timeout:
-            st.error(f"❌ Request timed out. Backend at {API} is not responding.")
-        except Exception as e:
-            st.error(f"❌ Unexpected error: {str(e)}")
 
+    # SAVE PROFILE BUTTON
+    if st.button("Save Profile"):
+        payload = {
+            "profile": {
+                "name": name,
+                "skills": skills,
+                "industries": industries,
+                "experience_level": exp_level,
+                "target_titles": target_titles,
+            },
+            "preferences": {
+                "location": {
+                    "city": city,
+                    "state": state,
+                    "country": country,
+                    "remote": remote,
+                    "radius_miles": radius
+                },
+                "salary": {"min": min_sal, "max": max_sal},
+                "employment_type": emp_types,
+                "exclude_keywords": exclude_kw,
+                "company_preferences": {
+                    "preferred": pref_companies,
+                    "avoid": avoid_companies
+                },
+                "job_age_limit_days": max_age
+            }
+        }
+
+        try:
+            res = requests.post(f"{API}/profile", json=payload, timeout=5)
+            if res.status_code == 200:
+                st.success("Profile saved successfully")
+            else:
+                st.error(f"Error {res.status_code}: {res.text}")
+        except Exception as e:
+            st.error(f"Failed to contact backend: {e}")
+
+
+# ==========================================================
+# TAB 2 — UPLOADS
+# ==========================================================
 with tab2:
-    st.subheader("Upload resumes & cover letters per purpose")
-    purpose = st.text_input("Purpose (e.g., consulting, product, ops)", value="ops")
-    rfile = st.file_uploader("Resume (.pdf or .docx)", type=["pdf","docx"])
-    cfile = st.file_uploader("Cover Letter (.pdf or .docx)", type=["pdf","docx"])
-    if st.button("Upload"):
+    st.subheader("Upload resumes & cover letters per category")
+
+    purpose = st.text_input("Purpose", value="ops")
+
+    rfile = st.file_uploader("Upload Resume", type=["pdf", "docx"])
+    cfile = st.file_uploader("Upload Cover Letter", type=["pdf", "docx"])
+
+    if st.button("Upload Files"):
         files = {}
         if rfile:
             files["resume"] = (rfile.name, rfile.read(), rfile.type)
         if cfile:
             files["cover"] = (cfile.name, cfile.read(), cfile.type)
-        data = {"purpose": purpose}
-        try:
-            r = requests.post(f"{API}/uploads", data=data, files=files, timeout=5)
-            if r.status_code == 200:
-                st.success("✅ Files uploaded successfully!")
-            else:
-                try:
-                    error_data = r.json()
-                    error_msg = error_data.get("detail", error_data.get("error", str(error_data)))
-                except:
-                    error_msg = r.text
-                st.error(f"❌ Error {r.status_code}: {error_msg}")
-        except requests.exceptions.ConnectionError:
-            st.error(f"❌ Cannot connect to backend at {API}")
-            st.warning("💡 Make sure the FastAPI backend is running")
-        except Exception as e:
-            st.error(f"❌ Error: {str(e)}")
 
+        try:
+            res = requests.post(f"{API}/uploads", data={"purpose": purpose}, files=files, timeout=10)
+            if res.status_code == 200:
+                st.success("Files uploaded successfully")
+            else:
+                st.error(f"Upload error {res.status_code}: {res.text}")
+        except Exception as e:
+            st.error(f"Error: {e}")
+
+
+# ==========================================================
+# TAB 3 — JOB RESULTS
+# ==========================================================
 with tab3:
     st.subheader("Search Jobs")
-    limit = st.slider("How many to fetch (top N)", 5, 50, 20)
+
+    limit = st.slider("How many jobs to fetch", 5, 50, 20)
+
     if st.button("Run Search"):
-        # You would fetch the saved profile/preferences from backend in real app.
-        # For demo, ask backend to use stored state or pass st.session_state.
-        # Here we just simulate by reusing the form payload you saved already on /profile (backend keeps it).
-        # Build a SearchRequest by asking backend for the saved profile (skipped in minimal slice).
-        # For now, reuse the last known values on client if needed.
         search_req = {
             "user_profile": {
-                "name": name, "skills": [s.strip() for s in skills if s.strip()],
-                "industries": [i.strip() for i in industries if i.strip()],
+                "name": name,
+                "skills": skills,
+                "industries": industries,
                 "experience_level": exp_level,
-                "target_titles": [t.strip() for t in target_titles if t.strip()],
+                "target_titles": target_titles,
             },
             "user_preferences": {
                 "location": {"city": city, "state": state, "country": country, "remote": remote, "radius_miles": radius},
-                "salary": {"min": int(min_sal), "max": int(max_sal)},
+                "salary": {"min": min_sal, "max": max_sal},
                 "employment_type": emp_types,
-                "exclude_keywords": [k.strip() for k in exclude_kw if k.strip()],
-                "company_preferences": {"preferred": [c.strip() for c in pref_companies if c.strip()],
-                                        "avoid": [c.strip() for c in avoid_companies if c.strip()]},
-                "job_age_limit_days": int(max_age)
+                "exclude_keywords": exclude_kw,
+                "company_preferences": {
+                    "preferred": pref_companies,
+                    "avoid": avoid_companies
+                },
+                "job_age_limit_days": max_age
             },
-            "limit": int(limit)
+            "limit": limit
         }
+
         try:
-            r = requests.post(f"{API}/search", json=search_req, timeout=10)
-            if r.status_code == 200:
-                st.session_state["jobs"] = r.json()
-                st.success(f"✅ Found {len(st.session_state['jobs'])} jobs")
+            res = requests.post(f"{API}/search", json=search_req, timeout=10)
+            if res.status_code == 200:
+                st.session_state["jobs"] = res.json()
+                st.success(f"Found {len(st.session_state['jobs'])} jobs")
             else:
-                try:
-                    error_data = r.json()
-                    error_msg = error_data.get("detail", error_data.get("error", str(error_data)))
-                except:
-                    error_msg = r.text
-                st.error(f"❌ Error {r.status_code}: {error_msg}")
-        except requests.exceptions.ConnectionError:
-            st.error(f"❌ Cannot connect to backend at {API}")
-            st.warning("💡 Make sure the FastAPI backend is running")
+                st.error(f"Search error {res.status_code}: {res.text}")
+
         except Exception as e:
-            st.error(f"❌ Error: {str(e)}")
+            st.error(f"Error: {e}")
 
-    # show results
+
+    # DISPLAY RESULTS
     jobs = st.session_state.get("jobs", [])
-    for j in jobs:
-        with st.container(border=True):
-            st.markdown(f"**{j['title']}** — {j['company']} · {j['location']}  \n[{j['url']}]({j['url']})")
-            st.caption(f"Source: {j['source']}  ·  Posted: {j.get('posted_at','N/A')}")
-            if st.button("Open", key=j["id"]):
-                st.session_state["selected_job"] = j
-                st.switch_page("streamlit_app.py")  # same page, flips to tab4 automatically below
 
+    for job in jobs:
+        with st.container():
+            st.markdown(f"### {job['title']} — {job['company']}")
+            st.write(job["location"])
+            st.write(f"[Job Link]({job['url']})")
+            st.caption(f"Source: {job['source']} · Posted: {job.get('posted_at','N/A')}")
+
+            if st.button("Open Details", key=job["id"]):
+                st.session_state["selected_job"] = job
+
+
+# ==========================================================
+# TAB 4 — DETAIL VIEW
+# ==========================================================
 with tab4:
-    st.subheader("Job Detail & AI Tweaks")
-    sel = st.session_state.get("selected_job")
-    if sel:
-        st.markdown(f"### {sel['title']} @ {sel['company']}")
+    st.subheader("Job Detail")
+
+    selected = st.session_state.get("selected_job")
+
+    if not selected:
+        st.info("Select a job from the Results tab to view details.")
+    else:
+        st.markdown(f"## {selected['title']} @ {selected['company']}")
+        st.write(selected["location"])
+
         with st.expander("Job Description"):
-            st.write(sel["description"][:3000])
+            st.write(selected["description"][:5000])
 
-        # pick which uploaded purpose to compare
-        purpose_for_match = st.text_input("Which resume set to use?", value="ops")
-        resume_txt = st.text_area("Paste resume text (temp)", placeholder="(In production, load + parse server-side)")
-        cover_txt = st.text_area("Paste cover letter text (optional)")
+        # Resume comparison
+        resume_text = st.text_area("Paste resume text")
+        cover_text = st.text_area("Paste cover letter text (optional)")
 
-        threshold = st.slider("Match threshold", 0.5, 0.95, 0.70, 0.01)
+        threshold = st.slider("Match threshold", 0.5, 0.95, 0.70)
 
         if st.button("Compute Match"):
             try:
-                payload = {"job": sel, "resume_text": resume_txt, "cover_text": cover_txt, "threshold": threshold}
-                r = requests.post(f"{API}/match", json=payload, timeout=10)
-                if r.status_code == 200:
-                    m = r.json()
-                    st.metric("Score", m.get("score", 0))
-                    st.progress(min(1.0, m.get("score", 0)))
-                    st.caption(f"Coverage: {m.get('coverage', 0)} · Cosine: {m.get('cosine', 0)}")
-                    for tw in m.get("tweaks", []):
-                        st.warning(f"{tw.get('type', 'info').title()} — {tw.get('message', '')}")
-                        if tw.get("keywords"):
-                            st.write(", ".join(tw["keywords"]))
+                payload = {
+                    "job": selected,
+                    "resume_text": resume_text,
+                    "cover_text": cover_text,
+                    "threshold": threshold
+                }
+                res = requests.post(f"{API}/match", json=payload, timeout=10)
+                if res.status_code == 200:
+                    match_result = res.json()
+                    st.metric("Match Score", match_result["score"])
+                    st.progress(match_result["score"])
+                    st.caption(f"Coverage: {match_result['coverage']}, Cosine: {match_result['cosine']}")
+
+                    for tweak in match_result.get("tweaks", []):
+                        st.warning(tweak["message"])
                 else:
-                    try:
-                        error_data = r.json()
-                        error_msg = error_data.get("detail", error_data.get("error", str(error_data)))
-                    except:
-                        error_msg = str(r.text) if r.text else f"Error {r.status_code}"
-                    st.error(f"❌ Error {r.status_code}: {error_msg}")
-            except requests.exceptions.ConnectionError:
-                st.error(f"❌ Cannot connect to backend at {API}")
-                st.warning("💡 Make sure the FastAPI backend is running")
+                    st.error(f"Match error: {res.text}")
             except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
-    else:
-        st.info("Select a job in the Results tab to view details.")
+                st.error(str(e))
