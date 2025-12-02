@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, Body
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from typing import Dict, Any, Optional
 from pydantic import BaseModel
@@ -25,9 +25,13 @@ SessionLocal = sessionmaker(bind=engine)
 # Import models
 try:
     from .models import Base, UserProfile as UserProfileModel
+    # Create all tables
     Base.metadata.create_all(bind=engine)
+    print("✅ Database tables initialized successfully")
 except Exception as e:
-    print(f"DB init warning: {e}")
+    print(f"❌ DB init warning: {e}")
+    import traceback
+    traceback.print_exc()
 
 # Create FastAPI app
 app = FastAPI(title="SkillScout API")
@@ -50,12 +54,40 @@ class ProfileData(BaseModel):
 @app.get("/")
 def root():
     """Root endpoint"""
-    return {"status": "running", "api": "SkillScout"}
+    # Check database connection
+    db_status = "connected"
+    try:
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        db.close()
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+    
+    return {
+        "status": "running", 
+        "api": "SkillScout",
+        "database": db_status
+    }
 
 @app.get("/health")
 def health():
-    """Health check"""
-    return {"status": "healthy"}
+    """Health check with database status"""
+    try:
+        db = SessionLocal()
+        # Test database connection
+        db.execute(text("SELECT 1"))
+        db.close()
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "api": "SkillScout"
+        }
+    except Exception as e:
+        return {
+            "status": "degraded",
+            "database": f"error: {str(e)}",
+            "api": "SkillScout"
+        }
 
 @app.get("/test")
 def test_endpoint():
@@ -87,7 +119,14 @@ def get_profile(user_id: str):
 @app.post("/profile")
 def save_profile(body: Dict[str, Any] = Body(...)):
     """Save profile - accepts profile and preferences from Streamlit app"""
+    db = None
     try:
+        # Ensure tables exist (in case they weren't created on startup)
+        try:
+            Base.metadata.create_all(bind=engine)
+        except Exception as create_error:
+            print(f"Warning: Could not ensure tables exist: {create_error}")
+        
         db = SessionLocal()
         # Use a default user_id or extract from body if provided
         user_id = body.get("user_id", "default_user")
@@ -108,12 +147,17 @@ def save_profile(body: Dict[str, Any] = Body(...)):
             db.add(new_profile)
         
         db.commit()
-        db.close()
         return {"ok": True, "user_id": user_id, "message": "Profile saved"}
     except Exception as e:
-        db.rollback()
-        db.close()
+        if db:
+            db.rollback()
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Error saving profile: {error_details}")
         return {"ok": False, "error": str(e)}
+    finally:
+        if db:
+            db.close()
 
 @app.post("/profile/{user_id}")
 def save_profile_by_id(user_id: str, body: ProfileData = Body(...)):
